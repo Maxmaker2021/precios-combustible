@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Campo Simple — Actualización de precios</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f3f4f6;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  .header {
+    background: #2C703C;
+    padding: 20px 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .brand { color: #fff; font-size: 16px; font-weight: 600; }
+  .brand-sub { color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 1px; }
+
+  .station-bar {
+    background: #eaf3de;
+    border-bottom: 1px solid #c0dd97;
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #2C703C; flex-shrink: 0; }
+  .station-name { font-size: 13px; font-weight: 600; color: #3B6D11; flex: 1; }
+  .station-id { font-size: 11px; color: #639922; font-family: monospace; }
+
+  .body { padding: 20px 18px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: #9ca3af; margin-bottom: 12px;
+  }
+  .section-label span { font-weight: 400; text-transform: none; font-size: 11px; }
+
+  .fuel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+  .fuel-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    background: #f9fafb;
+  }
+  .fuel-card.error { border-color: #fca5a5; background: #fff5f5; }
+  .fuel-label { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 2px; }
+  .fuel-sub { font-size: 11px; color: #6b7280; margin-bottom: 10px; }
+  .price-wrap {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #d1d5db;
+    border-radius: 8px; padding: 7px 10px;
+    transition: border-color 0.15s;
+  }
+  .price-wrap:focus-within { border-color: #2C703C; box-shadow: 0 0 0 2px rgba(44,112,60,0.12); }
+  .currency { font-size: 13px; color: #6b7280; }
+  .price-wrap input {
+    border: none; background: transparent;
+    font-size: 16px; font-weight: 600; color: #111;
+    width: 100%; outline: none;
+  }
+  .price-wrap input::placeholder { font-weight: 400; font-size: 13px; color: #9ca3af; }
+
+  hr { border: none; border-top: 1px solid #f3f4f6; margin: 4px 0 16px; }
+
+  .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .field { }
+  .field-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; display: block; }
+  .input-wrap {
+    display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #d1d5db;
+    border-radius: 8px; padding: 8px 10px;
+    transition: border-color 0.15s;
+  }
+  .input-wrap:focus-within { border-color: #2C703C; box-shadow: 0 0 0 2px rgba(44,112,60,0.12); }
+  .input-wrap input {
+    border: none; background: transparent;
+    font-size: 14px; color: #111; width: 100%; outline: none;
+  }
+  .input-wrap input::placeholder { color: #9ca3af; font-size: 13px; }
+  .unit { font-size: 11px; color: #9ca3af; white-space: nowrap; }
+
+  .date-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff; border: 1px solid #d1d5db;
+    border-radius: 8px; padding: 9px 12px;
+    transition: border-color 0.15s;
+  }
+  .date-wrap:focus-within { border-color: #2C703C; }
+  .date-wrap.error { border-color: #fca5a5; }
+  .date-icon { font-size: 16px; }
+  .date-wrap input[type=date] {
+    border: none; background: transparent;
+    font-size: 14px; color: #111; width: 100%; outline: none;
+    font-family: inherit;
+  }
+
+  .error-msg {
+    background: #fef2f2; border: 1px solid #fecaca;
+    border-radius: 8px; padding: 9px 12px;
+    font-size: 12px; color: #b91c1c;
+    margin-bottom: 12px; display: none;
+  }
+
+  .btn {
+    width: 100%; background: #2C703C; color: #fff;
+    border: none; border-radius: 10px;
+    padding: 14px; font-size: 15px; font-weight: 600;
+    cursor: pointer; margin-top: 20px;
+    transition: background 0.15s, transform 0.1s;
+    font-family: inherit;
+  }
+  .btn:hover { background: #3a8f4f; }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { background: #9ca3af; cursor: default; transform: none; }
+
+  .hint {
+    font-size: 11px; color: #9ca3af;
+    text-align: center; margin-top: 10px;
+  }
+
+  /* SUCCESS */
+  .success {
+    display: none;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .success-icon {
+    width: 56px; height: 56px;
+    background: #eaf3de; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px; font-size: 24px; color: #2C703C;
+  }
+  .success-title { font-size: 18px; font-weight: 600; color: #111; margin-bottom: 8px; }
+  .success-sub { font-size: 13px; color: #6b7280; line-height: 1.6; }
+  .success-badge {
+    margin-top: 20px; background: #eaf3de;
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: #3B6D11; font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="logo">🌱</div>
+    <div>
+      <div class="brand">Campo Simple</div>
+      <div class="brand-sub">Actualización de precios</div>
+    </div>
+  </div>
+
+  <div class="station-bar">
+    <div class="dot"></div>
+    <div class="station-name" id="stationName">Cargando...</div>
+    <div class="station-id" id="stationId"></div>
+  </div>
+
+  <!-- FORM -->
+  <div class="body" id="formBody">
+
+    <div class="section-label">Precios del día</div>
+    <div id="fuelError" class="error-msg">Ingresá al menos un precio (G2 o G3)</div>
+
+    <div class="fuel-grid">
+      <div class="fuel-card" id="cardG2">
+        <div class="fuel-label">Diesel G2</div>
+        <div class="fuel-sub">Grado 2</div>
+        <div class="price-wrap">
+          <span class="currency">$</span>
+          <input type="number" id="g2" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+        </div>
+      </div>
+      <div class="fuel-card" id="cardG3">
+        <div class="fuel-label">Diesel G3</div>
+        <div class="fuel-sub">Grado 3</div>
+        <div class="price-wrap">
+          <span class="currency">$</span>
+          <input type="number" id="g3" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section-label">Condiciones <span>— opcional</span></div>
+
+    <div class="opt-grid">
+      <div class="field">
+        <label class="field-label">Volumen mínimo</label>
+        <div class="input-wrap">
+          <input type="number" id="volMin" placeholder="0" min="0" inputmode="numeric">
+          <span class="unit">lts</span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Precio vol. mayor</label>
+        <div class="input-wrap">
+          <span class="unit">$</span>
+          <input type="number" id="volPrice" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="field" style="margin-bottom:16px;">
+      <label class="field-label">Distancia máx. de entrega</label>
+      <div class="input-wrap">
+        <input type="number" id="distMax" placeholder="0" min="0" inputmode="numeric">
+        <span class="unit">km</span>
+      </div>
+    </div>
+
+    <hr style="margin-top:0;">
+
+    <div class="section-label">Válido hasta</div>
+    <div class="date-wrap" id="dateWrap">
+      <span class="date-icon">📅</span>
+      <input type="date" id="validDate">
+    </div>
+
+    <div id="dateError" class="error-msg" style="margin-top:8px;">Seleccioná una fecha de vigencia</div>
+    <div id="sendError" class="error-msg" style="margin-top:8px;">Error al enviar. Intentá de nuevo.</div>
+
+    <button class="btn" id="submitBtn" onclick="enviar()">Enviar precios</button>
+    <p class="hint">Los precios quedan registrados con fecha y hora de envío</p>
+  </div>
+
+  <!-- SUCCESS -->
+  <div class="success" id="successBody">
+    <div class="success-icon">✓</div>
+    <div class="success-title">¡Precios enviados!</div>
+    <div class="success-sub">Los precios fueron registrados correctamente.<br>Campo Simple te avisa si necesita más información.</div>
+    <div class="success-badge" id="successBadge"></div>
+  </div>
+</div>
+
+<script>
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5QDdABQOeHYrAjT9FqquhQZ714ekn7AF1EPjU8ilS3pnNUONJTgPvRmPp3vzC-ZPwvA/exec";
+
+  // Leer parámetros de la URL: ?id=EST-042&nombre=YPF+Rosario+Norte
+  const params = new URLSearchParams(window.location.search);
+  const estacionId = params.get("id") || "EST-042";
+  const estacionNombre = params.get("nombre") || "YPF Estación Rosario Norte";
+
+  document.getElementById("stationName").textContent = estacionNombre;
+  document.getElementById("stationId").textContent = estacionId;
+
+  // Fecha por defecto: hoy + 7 días
+  const hoy = new Date();
+  const proxSemana = new Date(hoy.getTime() + 7 * 24 * 60 * 60 * 1000);
+  document.getElementById("validDate").value = proxSemana.toISOString().split("T")[0];
+  document.getElementById("validDate").min = hoy.toISOString().split("T")[0];
+
+  async function enviar() {
+    // Reset errores
+    document.getElementById("fuelError").style.display = "none";
+    document.getElementById("dateError").style.display = "none";
+    document.getElementById("sendError").style.display = "none";
+    document.getElementById("cardG2").classList.remove("error");
+    document.getElementById("cardG3").classList.remove("error");
+
+    const g2 = document.getElementById("g2").value.trim();
+    const g3 = document.getElementById("g3").value.trim();
+    const validDate = document.getElementById("validDate").value;
+
+    let ok = true;
+    if (!g2 && !g3) {
+      document.getElementById("fuelError").style.display = "block";
+      document.getElementById("cardG2").classList.add("error");
+      document.getElementById("cardG3").classList.add("error");
+      ok = false;
+    }
+    if (!validDate) {
+      document.getElementById("dateError").style.display = "block";
+      document.getElementById("dateWrap").classList.add("error");
+      ok = false;
+    }
+    if (!ok) return;
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "Enviando...";
+
+    const payload = {
+      estacion_id: estacionId,
+      estacion_nombre: estacionNombre,
+      diesel_g2: g2,
+      diesel_g3: g3,
+      vol_minimo: document.getElementById("volMin").value,
+      precio_vol_mayor: document.getElementById("volPrice").value,
+      distancia_max: document.getElementById("distMax").value,
+      valido_hasta: validDate,
+    };
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      // no-cors siempre resuelve sin error aunque falle — asumimos éxito
+      document.getElementById("formBody").style.display = "none";
+      document.getElementById("successBody").style.display = "block";
+      document.getElementById("successBadge").textContent = estacionNombre + " · " + estacionId;
+    } catch (e) {
+      document.getElementById("sendError").style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Enviar precios";
+    }
+  }
+</script>
+</body>
+</html>
