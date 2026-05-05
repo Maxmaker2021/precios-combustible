@@ -995,18 +995,23 @@ async function cotizar() {
     }
   });
 
+  // Normalizar valores de estaciones (comas -> puntos, string -> float)
+  const normFloat = v => parseFloat(String(v||'').replace(',','.')) || 0;
+
   // Filtrar estaciones que llegan al destino
   const estacionesCandidatas = estaciones.filter(e => {
-    const distMax = parseFloat(e.distancia_max)||0;
-    if (distMax <= 0) return false; // sin dato de distancia, no cotiza
-    if (!e.lat||!e.lng) return true; // sin coords, incluimos igual
-    const dist = distanciaKm(parseFloat(e.lat)||0, parseFloat(e.lng)||0, parseFloat(puntoEntrega.lat), parseFloat(puntoEntrega.lng));
+    const distMax = normFloat(e.distancia_max);
+    if (distMax <= 0) return false;
+    const eLat = normFloat(e.lat);
+    const eLng = normFloat(e.lng);
+    if (!eLat || !eLng) return true; // sin coords, incluimos igual
+    const dist = distanciaKm(eLat, eLng, parseFloat(puntoEntrega.lat), parseFloat(puntoEntrega.lng));
     return dist <= distMax;
   });
 
   // Cruzar con precios disponibles
   const conPrecio = estacionesCandidatas
-    .map(e => ({ ...e, precioCompra: preciosPorEstacion[e.id]?.precio || null }))
+    .map(e => ({ ...e, precioCompra: preciosPorEstacion[e.id]?.precio || null, latN: normFloat(e.lat), lngN: normFloat(e.lng) }))
     .filter(e => e.precioCompra !== null)
     .sort((a,b) => a.precioCompra - b.precioCompra);
 
